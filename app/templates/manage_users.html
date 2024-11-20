@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - OpenAlgo Trading Platform{% endblock %}
+
+{% block authenticated_content %}
+<div class="container mx-auto">
+    <!-- Header Section -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-base-content">User Management</h1>
+            <p class="text-base-content/70">Manage platform users and their roles</p>
+        </div>
+        <button onclick="document.getElementById('add-user-modal').showModal()" 
+                class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add New User
+        </button>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="card bg-base-200 shadow-lg">
+        <div class="card-body">
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-base-content/70">User</th>
+                            <th class="text-base-content/70">Email</th>
+                            <th class="text-base-content/70">Role</th>
+                            <th class="text-base-content/70">Status</th>
+                            <th class="text-base-content/70">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="hover:bg-base-300">
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar-content">
+                                        {{ user.username[0] }}
+                                    </div>
+                                    <div class="font-semibold text-base-content">
+                                        {{ user.username }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-base-content">{{ user.email }}</td>
+                            <td>
+                                <div class="badge 
+                                    {% if user.role.name == 'superadmin' %}
+                                        badge-secondary
+                                    {% elif user.role.name == 'admin' %}
+                                        badge-primary
+                                    {% else %}
+                                        badge-ghost
+                                    {% endif %}">
+                                    {{ user.role.name | title }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="badge {% if user.is_active %}badge-success{% else %}badge-error{% endif %}">
+                                    {{ "Active" if user.is_active else "Inactive" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal('{{ user.id }}', '{{ user.username }}', '{{ user.email }}', '{{ user.role_id }}', {{ user.is_active | tojson }})"
+                                            class="btn btn-ghost btn-sm text-primary">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                    {% if not user.is_superadmin() or current_user.is_superadmin() %}
+                                    <button onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')"
+                                            class="btn btn-ghost btn-sm text-error">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <dialog id="add-user-modal" class="modal">
+        <div class="modal-box bg-base-200">
+            <h3 class="font-bold text-lg text-base-content mb-4">Add New User</h3>
+            <form id="add-user-form" class="space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Username</span>
+                    </label>
+                    <input type="text" id="new-username" class="input input-bordered" required />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" id="new-email" class="input input-bordered" required />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Password</span>
+                    </label>
+                    <input type="password" id="new-password" class="input input-bordered" required />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Role</span>
+                    </label>
+                    <select id="new-role" class="select select-bordered w-full">
+                        {% for role in roles %}
+                        {% if role.name != 'superadmin' or current_user.is_superadmin() %}
+                        <option value="{{ role.id }}">{{ role.name | title }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-action">
+                    <button type="button" class="btn" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Edit User Modal -->
+    <dialog id="edit-user-modal" class="modal">
+        <div class="modal-box bg-base-200">
+            <h3 class="font-bold text-lg text-base-content mb-4">Edit User</h3>
+            <form id="edit-user-form" class="space-y-4">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Username</span>
+                    </label>
+                    <input type="text" id="edit-username" class="input input-bordered" required />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" id="edit-email" class="input input-bordered" required />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">New Password (leave blank to keep current)</span>
+                    </label>
+                    <input type="password" id="edit-password" class="input input-bordered" />
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Role</span>
+                    </label>
+                    <select id="edit-role" class="select select-bordered w-full">
+                        {% for role in roles %}
+                        {% if role.name != 'superadmin' or current_user.is_superadmin() %}
+                        <option value="{{ role.id }}">{{ role.name | title }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Active</span>
+                        <input type="checkbox" id="edit-active" class="toggle toggle-primary" />
+                    </label>
+                </div>
+                <div class="modal-action">
+                    <button type="button" class="btn" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+</div>
+
+<script>
+document.getElementById('add-user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await addUser();
+});
+
+document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await updateUser();
+});
+
+function openEditModal(id, username, email, roleId, isActive) {
+    document.getElementById('edit-user-id').value = id;
+    document.getElementById('edit-username').value = username;
+    document.getElementById('edit-email').value = email;
+    document.getElementById('edit-role').value = roleId;
+    document.getElementById('edit-active').checked = isActive;
+    document.getElementById('edit-user-modal').showModal();
+}
+
+function closeEditModal() {
+    document.getElementById('edit-user-modal').close();
+}
+
+function closeAddModal() {
+    document.getElementById('add-user-modal').close();
+}
+
+async function addUser() {
+    const userData = {
+        username: document.getElementById('new-username').value,
+        email: document.getElementById('new-email').value,
+        password: document.getElementById('new-password').value,
+    };
+
+    try {
+        const response = await fetch('/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert(error.detail);
+        }
+    } catch (error) {
+        alert('Error adding user');
+    }
+}
+
+async function updateUser() {
+    const userId = document.getElementById('edit-user-id').value;
+    const userData = {
+        username: document.getElementById('edit-username').value,
+        email: document.getElementById('edit-email').value,
+        password: document.getElementById('edit-password').value,
+        role_id: parseInt(document.getElementById('edit-role').value),
+        is_active: document.getElementById('edit-active').checked
+    };
+
+    try {
+        const response = await fetch(`/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert(error.detail);
+        }
+    } catch (error) {
+        alert('Error updating user');
+    }
+}
+
+function confirmDelete(userId, username) {
+    if (confirm(`Are you sure you want to delete user ${username}?`)) {
+        deleteUser(userId);
+    }
+}
+
+async function deleteUser(userId) {
+    try {
+        const response = await fetch(`/users/${userId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert(error.detail);
+        }
+    } catch (error) {
+        alert('Error deleting user');
+    }
+}
+</script>
+{% endblock %}

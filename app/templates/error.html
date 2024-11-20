@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Error - OpenAlgo Trading Platform{% endblock %}
+
+{% block public_content %}
+<div class="min-h-screen flex items-center justify-center bg-base-100">
+    <div class="max-w-md w-full px-6">
+        <div class="text-center">
+            {% if error == "Page Not Found" %}
+            <!-- 404 Error -->
+            <div class="mb-8">
+                <h1 class="text-8xl font-bold text-primary">404</h1>
+                <div class="mt-4 text-base-content/70">
+                    <div class="text-2xl font-semibold mb-2">Page Not Found</div>
+                    <p>The page you're looking for doesn't exist or has been moved.</p>
+                </div>
+            </div>
+
+            {% elif error == "Forbidden" %}
+            <!-- 403 Error -->
+            <div class="mb-8">
+                <div class="relative">
+                    <h1 class="text-8xl font-bold text-primary mb-2">403</h1>
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <svg class="w-24 h-24 text-primary/20" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 1C8.676 1 6 3.676 6 7v4H4v12h16V11h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v4H8V7c0-2.276 1.724-4 4-4z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4 text-base-content/70">
+                    <div class="text-2xl font-semibold mb-2">Access Denied</div>
+                    <p class="mb-4">You don't have permission to access this resource.</p>
+                    <div class="flex flex-col gap-2 text-sm">
+                        <p class="text-base-content/50">Possible reasons:</p>
+                        <ul class="list-disc list-inside text-left">
+                            <li>Insufficient privileges</li>
+                            <li>Role restrictions</li>
+                            <li>Account limitations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- 500 Error -->
+            <div class="mb-8">
+                <h1 class="text-8xl font-bold text-primary">500</h1>
+                <div class="mt-4 text-base-content/70">
+                    <div class="text-2xl font-semibold mb-2">Internal Server Error</div>
+                    <p>Something went wrong. Please try again later.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center gap-4">
+                <a href="/" class="btn btn-primary">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Go Home
+                </a>
+                <button onclick="history.back()" class="btn btn-outline">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/>
+                    </svg>
+                    Go Back
+                </button>
+            </div>
+
+            {% if error == "Forbidden" %}
+            <!-- Help Section for 403 -->
+            <div class="mt-8 text-sm text-base-content/50">
+                <p>Need help? Contact your administrator or</p>
+                <a href="/login" class="link link-primary">sign in with a different account</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .text-8xl {
+        font-size: 6rem;
+        line-height: 1;
+        animation: pulse 2s infinite;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}OpenAlgo Trading Platform{% endblock %}
+
+{% block public_content %}
+<!-- Hero Section -->
+<div class="relative bg-base-100">
+    <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-10"></div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold tracking-tight text-base-content sm:text-5xl lg:text-6xl">
+                OpenAlgo Trading Platform
+            </h1>
+            <p class="mt-6 text-xl text-base-content/70 max-w-3xl mx-auto">
+                Build, test, and deploy your algorithmic trading strategies with ease. Connect with Alpaca Markets for seamless execution in both paper and live trading environments.
+            </p>
+            <div class="mt-10 flex justify-center gap-4">
+                {% if user %}
+                <a href="/dashboard" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                {% else %}
+                <a href="/login" class="btn btn-primary btn-lg">Login</a>
+                <a href="/register" class="btn btn-outline btn-primary btn-lg">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-24 bg-base-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-base-content sm:text-4xl">
+                Platform Features
+            </h2>
+            <p class="mt-4 text-lg text-base-content/70">
+                Everything you need to succeed in algorithmic trading
+            </p>
+        </div>
+
+        <div class="mt-20 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <!-- Feature 1 -->
+            <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-base-content">Advanced Strategies</h3>
+                    <p class="mt-2 text-base text-base-content/70">
+                        Build and deploy sophisticated trading strategies using our intuitive platform.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-base-content">Real-Time Analytics</h3>
+                    <p class="mt-2 text-base text-base-content/70">
+                        Monitor your strategies' performance with comprehensive real-time analytics.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-base-content">Risk Management</h3>
+                    <p class="mt-2 text-base text-base-content/70">
+                        Built-in risk management tools to protect your investments.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="py-24 bg-base-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="card bg-gradient-to-r from-primary to-secondary text-primary-content">
+            <div class="card-body items-center text-center py-12">
+                <h2 class="card-title text-3xl font-extrabold sm:text-4xl mb-4">
+                    Ready to get started?
+                </h2>
+                <p class="text-lg opacity-90 mb-8">Join our community today.</p>
+                <div class="card-actions">
+                    {% if user %}
+                    <a href="/dashboard" class="btn btn-lg bg-base-100 text-primary hover:bg-base-200">
+                        Go to Dashboard
+                    </a>
+                    {% else %}
+                    <a href="/register" class="btn btn-lg bg-base-100 text-primary hover:bg-base-200">
+                        Get Started
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

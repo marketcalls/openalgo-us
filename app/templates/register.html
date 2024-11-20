@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Register - OpenAlgo Trading Platform{% endblock %}
+
+{% block public_content %}
+<div class="min-h-screen flex items-center justify-center bg-base-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-base-content">
+                Create your account
+            </h2>
+            <p class="mt-2 text-center text-sm text-base-content/70">
+                Start your algorithmic trading journey
+            </p>
+        </div>
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body">
+                <form id="registerForm" class="space-y-6">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email address</span>
+                        </label>
+                        <input id="email" name="email" type="email" required 
+                               class="input input-bordered w-full" />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Username</span>
+                        </label>
+                        <input id="username" name="username" type="text" required 
+                               class="input input-bordered w-full" />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Password</span>
+                        </label>
+                        <input id="password" name="password" type="password" required 
+                               class="input input-bordered w-full" />
+                        <label class="label">
+                            <span class="label-text-alt text-base-content/60">Must be at least 8 characters</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Confirm Password</span>
+                        </label>
+                        <input id="confirm_password" name="confirm_password" type="password" required 
+                               class="input input-bordered w-full" />
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <div class="divider">Already have an account?</div>
+
+                <div class="form-control">
+                    <a href="/login" class="btn btn-outline btn-primary w-full">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long!');
+        return;
+    }
+
+    const formData = {
+        email: document.getElementById('email').value,
+        username: document.getElementById('username').value,
+        password: password
+    };
+
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            // Show success message using toast
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-top toast-center';
+            toast.innerHTML = `
+                <div class="alert alert-success">
+                    <span>Registration successful! Redirecting to login...</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            const data = await response.json();
+            // Show error message using toast
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-top toast-center';
+            toast.innerHTML = `
+                <div class="alert alert-error">
+                    <span>${data.detail || 'Registration failed'}</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+        }
+    } catch (error) {
+        // Show error message using toast
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-top toast-center';
+        toast.innerHTML = `
+            <div class="alert alert-error">
+                <span>An error occurred during registration</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        console.error('Error:', error);
+    }
+});
+</script>
+{% endblock %}
