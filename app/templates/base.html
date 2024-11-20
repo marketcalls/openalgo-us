@@ -68,8 +68,8 @@
         }
     </style>
 </head>
-<body>
-    {% if user %}
+<body class="bg-base-100">
+    {% if request.url.path != "/" and user %}
         <!-- Top Navigation -->
         <nav class="fixed w-full z-10" style="background: var(--nav-bg)">
             <div class="max-w-full mx-auto px-4">
