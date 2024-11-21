@@ -14,6 +14,7 @@ A modern, open-source algorithmic trading platform for Alpaca Markets, supportin
 ### User Management
 - Role-based access control (Super Admin, Admin, User)
 - Secure authentication system with JWT
+- Google Sign-In integration
 - User management interface for administrators
 - Profile customization options
 
@@ -39,7 +40,9 @@ A modern, open-source algorithmic trading platform for Alpaca Markets, supportin
   - Tailwind CSS
   - DaisyUI Components
   - Jinja2 Templates
-- **Authentication**: JWT (JSON Web Tokens)
+- **Authentication**: 
+  - JWT (JSON Web Tokens)
+  - Google Sign-In
 - **API Integration**: Alpaca Markets API
 
 ## Prerequisites
@@ -100,9 +103,58 @@ ALPACA_SECRET_KEY=your-alpaca-secret-key
 ALPACA_API_BASE_URL=https://paper-api.alpaca.markets
 ```
 
-3. The application uses SQLite by default for easy setup
-4. First user to register automatically becomes Super Admin
-5. Subsequent users can be managed by admins through the user management interface
+## Google Sign-In Setup
+
+1. Create Project in Google Cloud Console:
+   ```
+   1. Go to console.cloud.google.com
+   2. Click "Create Project"
+   3. Enter project name
+   4. Click "Create"
+   ```
+
+2. Configure OAuth Consent Screen:
+   ```
+   1. Go to "APIs & Services" → "OAuth consent screen"
+   2. Select "External" for User Type
+   3. Fill required information:
+      - App name
+      - User support email
+      - Application home page: http://127.0.0.1:8000
+      - Developer contact email
+   4. Add scopes:
+      - .../auth/userinfo.email
+      - .../auth/userinfo.profile
+   5. Add test users for development
+   ```
+
+3. Create OAuth Client ID:
+   ```
+   1. Go to "APIs & Services" → "Credentials"
+   2. Click "Create Credentials" → "OAuth client ID"
+   3. Select "Web application"
+   4. Add JavaScript origins:
+      http://127.0.0.1:8000
+   5. Add authorized redirect URI:
+      http://127.0.0.1:8000/auth/google/callback
+   6. Click "Create"
+   7. Save Client ID and Secret
+   ```
+
+4. Configure in Application:
+   ```
+   1. Login as super-admin
+   2. Go to /manage/auth
+   3. Enable Google authentication
+   4. Enter Client ID and Secret
+   5. Save settings
+   ```
+
+Important Notes:
+- Save your Client Secret immediately - it won't be shown again
+- Add all test users during development
+- For production, replace 127.0.0.1:8000 with your domain
+- Make sure JavaScript origins match your application URL
 
 ## Running the Application
 
@@ -112,9 +164,9 @@ uvicorn app.main:app --reload
 ```
 
 2. Access the application:
-- Main application: http://localhost:8000
-- API documentation: http://localhost:8000/docs
-- Alternative API docs: http://localhost:8000/redoc
+- Main application: http://127.0.0.1:8000
+- API documentation: http://127.0.0.1:8000/docs
+- Alternative API docs: http://127.0.0.1:8000/redoc
 
 ## User Roles and Permissions
 
@@ -123,6 +175,7 @@ uvicorn app.main:app --reload
 - Can manage all users and roles
 - Access to all platform features
 - Can promote/demote other users
+- Can configure authentication settings
 
 ### Admin
 - Can manage regular users
@@ -151,7 +204,8 @@ openalgo-us/
 │   │   ├── login.html         # Login page
 │   │   ├── register.html      # Registration
 │   │   ├── dashboard.html     # Main dashboard
-│   │   └── manage_users.html  # User management
+│   │   ├── manage_users.html  # User management
+│   │   └── manage_auth.html   # Auth settings
 │   ├── static/                # Static assets
 │   ├── main.py               # Application entry
 │   ├── auth.py              # Authentication logic
@@ -167,6 +221,7 @@ openalgo-us/
 ## Security Features
 
 - JWT-based authentication
+- Google Sign-In integration
 - Password hashing with bcrypt
 - Role-based access control
 - Secure cookie handling
@@ -210,5 +265,3 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE.](LICENSE
 ## Support
 
 For support, please open an issue in the GitHub repository or contact the maintainers.
-
-

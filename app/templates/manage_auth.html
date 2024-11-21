@@ -84,7 +84,7 @@
                             <ul class="list-disc ml-8 mt-2">
                                 <li>App name</li>
                                 <li>User support email</li>
-                                <li>Application home page (e.g., http://localhost:8000)</li>
+                                <li>Application home page: <code class="bg-base-300 px-2 py-1">http://127.0.0.1:8000</code></li>
                                 <li>Developer contact email</li>
                             </ul>
                         </li>
@@ -105,9 +105,14 @@
                         <li>Go to "APIs & Services" → "Credentials"</li>
                         <li>Click "Create Credentials" → "OAuth client ID"</li>
                         <li>Select "Web application" as Application type</li>
+                        <li>Add JavaScript origins:
+                            <code class="block bg-base-300 p-2 mt-2 rounded">
+                                http://127.0.0.1:8000
+                            </code>
+                        </li>
                         <li>Add authorized redirect URIs:
                             <code class="block bg-base-300 p-2 mt-2 rounded">
-                                {{ request.url_root }}auth/google/callback
+                                http://127.0.0.1:8000/auth/google/callback
                             </code>
                         </li>
                         <li>Click "Create"</li>
@@ -125,7 +130,8 @@
                         <ul class="list-disc ml-6 mt-2">
                             <li>Save your Client Secret immediately - it won't be shown again</li>
                             <li>Add all test users during development</li>
-                            <li>For production, you may need to verify your app with Google</li>
+                            <li>For production, replace 127.0.0.1:8000 with your domain</li>
+                            <li>Make sure JavaScript origins match your application URL</li>
                         </ul>
                     </div>
                 </div>
