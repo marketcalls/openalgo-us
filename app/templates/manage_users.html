@@ -4,6 +4,9 @@
 
 {% block authenticated_content %}
 <div class="container mx-auto">
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast toast-end z-50"></div>
+
     <!-- Header Section -->
     <div class="mb-6 flex justify-between items-center">
         <div>
@@ -35,7 +38,7 @@
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr class="hover:bg-base-300" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role-id="{{ user.role_id }}" data-is-active="{{ user.is_active | tojson }}">
+                        <tr class="hover:bg-base-300" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role-id="{{ user.role_id }}" data-is-active="{{ user.is_active | tojson }}" data-is-superadmin="{{ user.is_superadmin() | tojson }}">
                             <td>
                                 <div class="flex items-center gap-3">
                                     <div class="avatar-content">
@@ -66,13 +69,13 @@
                             </td>
                             <td>
                                 <div class="flex gap-2">
+                                    {% if not user.is_superadmin() %}
                                     <button onclick="openEditModal(this.closest('tr'))" class="btn btn-ghost btn-sm text-primary">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
-                                    {% if not user.is_superadmin() or current_user.is_superadmin() %}
-                                    <button onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')" class="btn btn-ghost btn-sm text-error">
+                                    <button onclick="deleteUser('{{ user.id }}')" class="btn btn-ghost btn-sm text-error">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
@@ -117,9 +120,7 @@
                     </label>
                     <select id="new-role" class="select select-bordered w-full">
                         {% for role in roles %}
-                        {% if role.name != 'superadmin' or current_user.is_superadmin() %}
                         <option value="{{ role.id }}">{{ role.name | title }}</option>
-                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -155,18 +156,18 @@
                     </label>
                     <input type="password" id="edit-password" class="input input-bordered" />
                 </div>
+                {% if current_user.is_superadmin() %}
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Role</span>
                     </label>
                     <select id="edit-role" class="select select-bordered w-full">
                         {% for role in roles %}
-                        {% if role.name != 'superadmin' or current_user.is_superadmin() %}
                         <option value="{{ role.id }}">{{ role.name | title }}</option>
-                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
+                {% endif %}
                 <div class="form-control">
                     <label class="label cursor-pointer">
                         <span class="label-text">Active</span>
@@ -183,6 +184,22 @@
 </div>
 
 <script>
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} mb-2`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="btn btn-ghost btn-xs">✕</button>
+    `;
+    
+    const container = document.getElementById('toast-container');
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
 document.getElementById('add-user-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     await addUser();
@@ -199,11 +216,19 @@ function openEditModal(row) {
     const email = row.dataset.email;
     const roleId = row.dataset.roleId;
     const isActive = row.dataset.isActive === 'true';
+    const isSuperadmin = row.dataset.isSuperadmin === 'true';
+
+    if (isSuperadmin) {
+        showToast("Superadmin cannot be modified", "error");
+        return;
+    }
 
     document.getElementById('edit-user-id').value = userId;
     document.getElementById('edit-username').value = username;
     document.getElementById('edit-email').value = email;
-    document.getElementById('edit-role').value = roleId;
+    if (document.getElementById('edit-role')) {
+        document.getElementById('edit-role').value = roleId;
+    }
     document.getElementById('edit-active').checked = isActive;
     document.getElementById('edit-user-modal').showModal();
 }
@@ -233,14 +258,15 @@ async function addUser() {
             body: JSON.stringify(userData)
         });
 
+        const data = await response.json();
         if (response.ok) {
+            showToast(data.message, "success");
             location.reload();
         } else {
-            const error = await response.json();
-            alert(error.detail);
+            showToast(data.message, "error");
         }
     } catch (error) {
-        alert('Error adding user');
+        showToast("Error adding user", "error");
     }
 }
 
@@ -250,9 +276,12 @@ async function updateUser() {
         username: document.getElementById('edit-username').value,
         email: document.getElementById('edit-email').value,
         password: document.getElementById('edit-password').value || null,
-        role_id: parseInt(document.getElementById('edit-role').value),
         is_active: document.getElementById('edit-active').checked
     };
+
+    if (document.getElementById('edit-role')) {
+        userData.role_id = parseInt(document.getElementById('edit-role').value);
+    }
 
     try {
         const response = await fetch(`/manage/users/${userId}`, {
@@ -263,20 +292,15 @@ async function updateUser() {
             body: JSON.stringify(userData)
         });
 
+        const data = await response.json();
         if (response.ok) {
+            showToast(data.message, "success");
             location.reload();
         } else {
-            const error = await response.json();
-            alert(error.detail);
+            showToast(data.message, "error");
         }
     } catch (error) {
-        alert('Error updating user');
-    }
-}
-
-function confirmDelete(userId, username) {
-    if (confirm(`Are you sure you want to delete user ${username}?`)) {
-        deleteUser(userId);
+        showToast("Error updating user", "error");
     }
 }
 
@@ -286,14 +310,15 @@ async function deleteUser(userId) {
             method: 'DELETE'
         });
 
+        const data = await response.json();
         if (response.ok) {
+            showToast(data.message, "success");
             location.reload();
         } else {
-            const error = await response.json();
-            alert(error.detail);
+            showToast(data.message, "error");
         }
     } catch (error) {
-        alert('Error deleting user');
+        showToast("Error deleting user", "error");
     }
 }
 </script>
