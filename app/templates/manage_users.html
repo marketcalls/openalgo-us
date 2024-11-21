@@ -35,7 +35,7 @@
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr class="hover:bg-base-300">
+                        <tr class="hover:bg-base-300" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-email="{{ user.email }}" data-role-id="{{ user.role_id }}" data-is-active="{{ user.is_active | tojson }}">
                             <td>
                                 <div class="flex items-center gap-3">
                                     <div class="avatar-content">
@@ -66,15 +66,13 @@
                             </td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button onclick="openEditModal('{{ user.id }}', '{{ user.username }}', '{{ user.email }}', '{{ user.role_id }}', {{ user.is_active | tojson }})"
-                                            class="btn btn-ghost btn-sm text-primary">
+                                    <button onclick="openEditModal(this.closest('tr'))" class="btn btn-ghost btn-sm text-primary">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
                                     {% if not user.is_superadmin() or current_user.is_superadmin() %}
-                                    <button onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')"
-                                            class="btn btn-ghost btn-sm text-error">
+                                    <button onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')" class="btn btn-ghost btn-sm text-error">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
@@ -195,8 +193,14 @@ document.getElementById('edit-user-form').addEventListener('submit', async funct
     await updateUser();
 });
 
-function openEditModal(id, username, email, roleId, isActive) {
-    document.getElementById('edit-user-id').value = id;
+function openEditModal(row) {
+    const userId = row.dataset.userId;
+    const username = row.dataset.username;
+    const email = row.dataset.email;
+    const roleId = row.dataset.roleId;
+    const isActive = row.dataset.isActive === 'true';
+
+    document.getElementById('edit-user-id').value = userId;
     document.getElementById('edit-username').value = username;
     document.getElementById('edit-email').value = email;
     document.getElementById('edit-role').value = roleId;
@@ -217,13 +221,14 @@ async function addUser() {
         username: document.getElementById('new-username').value,
         email: document.getElementById('new-email').value,
         password: document.getElementById('new-password').value,
+        role_id: parseInt(document.getElementById('new-role').value)
     };
 
     try {
-        const response = await fetch('/users', {
+        const response = await fetch('/manage/users', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(userData)
         });
@@ -244,16 +249,16 @@ async function updateUser() {
     const userData = {
         username: document.getElementById('edit-username').value,
         email: document.getElementById('edit-email').value,
-        password: document.getElementById('edit-password').value,
+        password: document.getElementById('edit-password').value || null,
         role_id: parseInt(document.getElementById('edit-role').value),
         is_active: document.getElementById('edit-active').checked
     };
 
     try {
-        const response = await fetch(`/users/${userId}`, {
+        const response = await fetch(`/manage/users/${userId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(userData)
         });
@@ -277,7 +282,7 @@ function confirmDelete(userId, username) {
 
 async function deleteUser(userId) {
     try {
-        const response = await fetch(`/users/${userId}`, {
+        const response = await fetch(`/manage/users/${userId}`, {
             method: 'DELETE'
         });
 
