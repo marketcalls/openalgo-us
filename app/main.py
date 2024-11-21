@@ -117,7 +117,9 @@ PUBLIC_PATHS = [
     "/static",
     "/docs",
     "/openapi.json",
-    "/redoc"
+    "/redoc",
+    "/auth/google/login",
+    "/auth/google/callback"
 ]
 
 @app.middleware("http")

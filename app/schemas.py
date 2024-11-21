@@ -51,3 +51,26 @@ class TokenData(BaseModel):
 class LoginForm(BaseModel):
     username: str
     password: str
+
+class AuthSettingsBase(BaseModel):
+    regular_auth_enabled: bool
+    google_auth_enabled: bool
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+
+class AuthSettingsCreate(AuthSettingsBase):
+    pass
+
+class AuthSettingsUpdate(BaseModel):
+    regular_auth_enabled: Optional[bool] = None
+    google_auth_enabled: Optional[bool] = None
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+
+class AuthSettings(AuthSettingsBase):
+    id: int
+    updated_at: Optional[datetime] = None
+    updated_by: int
+
+    class Config:
+        from_attributes = True

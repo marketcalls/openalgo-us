@@ -7,10 +7,119 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import List
 from .dashboard_router import get_current_user_from_cookie
 
-router = APIRouter()
+router = APIRouter(prefix="/manage")
 templates = Jinja2Templates(directory="app/templates")
 
-@router.get("/manage", response_class=HTMLResponse)
+@router.get("/auth", response_class=HTMLResponse)
+async def manage_auth_page(
+    request: Request,
+    current_user: models.User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    # Check if user is superadmin
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access auth settings"
+        )
+    
+    # Get auth settings
+    settings = db.query(models.AuthSettings).first()
+    if not settings:
+        # Create default settings if none exist
+        settings = models.AuthSettings(
+            regular_auth_enabled=True,
+            google_auth_enabled=False,
+            updated_by=current_user.id
+        )
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    
+    return templates.TemplateResponse(
+        "manage_auth.html",
+        {
+            "request": request,
+            "settings": settings,
+            "user": current_user,
+            "is_admin": current_user.is_admin(),
+            "is_superadmin": current_user.is_superadmin()
+        }
+    )
+
+@router.post("/auth", response_class=HTMLResponse)
+async def update_auth_settings(
+    request: Request,
+    regular_auth_enabled: bool = Form(False),
+    google_auth_enabled: bool = Form(False),
+    google_client_id: str = Form(None),
+    google_client_secret: str = Form(None),
+    current_user: models.User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    # Check if user is superadmin
+    if not current_user.is_superadmin():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can modify auth settings"
+        )
+    
+    # Ensure at least one auth method is enabled
+    if not regular_auth_enabled and not google_auth_enabled:
+        return templates.TemplateResponse(
+            "manage_auth.html",
+            {
+                "request": request,
+                "settings": db.query(models.AuthSettings).first(),
+                "user": current_user,
+                "is_admin": current_user.is_admin(),
+                "is_superadmin": current_user.is_superadmin(),
+                "messages": [{"type": "error", "text": "At least one authentication method must be enabled"}]
+            }
+        )
+    
+    # If Google auth is enabled, require client ID and secret
+    if google_auth_enabled and (not google_client_id or not google_client_secret):
+        return templates.TemplateResponse(
+            "manage_auth.html",
+            {
+                "request": request,
+                "settings": db.query(models.AuthSettings).first(),
+                "user": current_user,
+                "is_admin": current_user.is_admin(),
+                "is_superadmin": current_user.is_superadmin(),
+                "messages": [{"type": "error", "text": "Google Client ID and Secret are required when Google Auth is enabled"}]
+            }
+        )
+    
+    # Update settings
+    settings = db.query(models.AuthSettings).first()
+    if not settings:
+        settings = models.AuthSettings()
+        db.add(settings)
+    
+    settings.regular_auth_enabled = regular_auth_enabled
+    settings.google_auth_enabled = google_auth_enabled
+    settings.google_client_id = google_client_id if google_auth_enabled else None
+    settings.google_client_secret = google_client_secret if google_auth_enabled else None
+    settings.updated_by = current_user.id
+    
+    db.commit()
+    db.refresh(settings)
+    
+    return templates.TemplateResponse(
+        "manage_auth.html",
+        {
+            "request": request,
+            "settings": settings,
+            "user": current_user,
+            "is_admin": current_user.is_admin(),
+            "is_superadmin": current_user.is_superadmin(),
+            "messages": [{"type": "success", "text": "Authentication settings updated successfully"}]
+        }
+    )
+
+@router.get("", response_class=HTMLResponse)
 async def manage_users_page(
     request: Request,
     current_user: models.User = Depends(get_current_user_from_cookie),

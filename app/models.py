@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -29,3 +29,14 @@ class User(Base):
 
     def is_admin(self):
         return self.role.name in ["superadmin", "admin"]
+
+class AuthSettings(Base):
+    __tablename__ = "auth_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    regular_auth_enabled = Column(Boolean, default=True)
+    google_auth_enabled = Column(Boolean, default=False)
+    google_client_id = Column(String, nullable=True)
+    google_client_secret = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_by = Column(Integer, ForeignKey("users.id"))
